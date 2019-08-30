@@ -56,7 +56,7 @@ internal abstract class AbstractSendChannel<E> : SendChannel<E> {
 
     /**
      * Tries to add element to buffer or to queued receiver if select statement clause was not selected yet.
-     * Return type is `ALREADY_SELECTED | OFFER_SUCCESS | OFFER_FAILED | Closed`.
+     * Return type is `ALREADY_SELECTED | OFFER_SUCCESS | OFFER_FAILED | RETRY_ATOMIC | Closed`.
      * @suppress **This is unstable API and it is subject to change.**
      */
     protected open fun offerSelectInternal(element: E, select: SelectInstance<*>): Any {
@@ -352,10 +352,11 @@ internal abstract class AbstractSendChannel<E> : SendChannel<E> {
             else -> null
         }
 
-        override fun validatePrepared(node: ReceiveOrClosed<E>): Boolean {
-            val token = node.tryResumeReceive(element, idempotent = this) ?: return false
+        override fun validatePrepared(node: ReceiveOrClosed<E>): Any? {
+            val token = node.tryResumeReceive(element, idempotent = this) ?: return REMOVE_PREPARED
+            if (token === RETRY_ATOMIC) return RETRY_ATOMIC
             resumeToken = token
-            return true
+            return null
         }
     }
 
@@ -388,6 +389,7 @@ internal abstract class AbstractSendChannel<E> : SendChannel<E> {
             when {
                 offerResult === ALREADY_SELECTED -> return
                 offerResult === OFFER_FAILED -> {} // retry
+                offerResult === RETRY_ATOMIC -> {} // retry
                 offerResult === OFFER_SUCCESS -> {
                     block.startCoroutineUnintercepted(receiver = this, completion = select.completion)
                     return
@@ -438,7 +440,7 @@ internal abstract class AbstractSendChannel<E> : SendChannel<E> {
         @JvmField val block: suspend (SendChannel<E>) -> R
     ) : Send(), DisposableHandle {
         override fun tryResumeSend(idempotent: Any?): Any? =
-            if (select.trySelect(idempotent)) SELECT_STARTED else null
+            select.trySelectIdempotent(idempotent)
 
         override fun completeResumeSend(token: Any) {
             assert { token === SELECT_STARTED }
@@ -450,7 +452,7 @@ internal abstract class AbstractSendChannel<E> : SendChannel<E> {
         }
 
         override fun resumeSendClosed(closed: Closed<*>) {
-            if (select.trySelect(null))
+            if (select.trySelect())
                 select.resumeSelectCancellableWithException(closed.sendException)
         }
 
@@ -505,7 +507,7 @@ internal abstract class AbstractChannel<E> : AbstractSendChannel<E>(), Channel<E
 
     /**
      * Tries to remove element from buffer or from queued sender if select statement clause was not selected yet.
-     * Return type is `ALREADY_SELECTED | E | POLL_FAILED | Closed`
+     * Return type is `ALREADY_SELECTED | E | POLL_FAILED | RETRY_ATOMIC | Closed`
      * @suppress **This is unstable API and it is subject to change.**
      */
     protected open fun pollSelectInternal(select: SelectInstance<*>): Any? {
@@ -655,11 +657,12 @@ internal abstract class AbstractChannel<E> : AbstractSendChannel<E>(), Channel<E
         }
 
         @Suppress("UNCHECKED_CAST")
-        override fun validatePrepared(node: Send): Boolean {
-            val token = node.tryResumeSend(idempotent = this) ?: return false
+        override fun validatePrepared(node: Send): Any? {
+            val token = node.tryResumeSend(idempotent = this) ?: return REMOVE_PREPARED
+            if (token === RETRY_ATOMIC) return RETRY_ATOMIC
             resumeToken = token
             pollResult = node.pollResult as E
-            return true
+            return null
         }
     }
 
@@ -681,6 +684,7 @@ internal abstract class AbstractChannel<E> : AbstractSendChannel<E>(), Channel<E
                 when {
                     pollResult === ALREADY_SELECTED -> return
                     pollResult === POLL_FAILED -> {} // retry
+                    pollResult === RETRY_ATOMIC -> {}
                     pollResult is Closed<*> -> throw recoverStackTrace(pollResult.receiveException)
                     else -> {
                         block.startCoroutineUnintercepted(pollResult as E, select.completion)
@@ -709,9 +713,10 @@ internal abstract class AbstractChannel<E> : AbstractSendChannel<E>(), Channel<E
                 when {
                     pollResult === ALREADY_SELECTED -> return
                     pollResult === POLL_FAILED -> {} // retry
+                    pollResult === RETRY_ATOMIC -> {} // retry
                     pollResult is Closed<*> -> {
                         if (pollResult.closeCause == null) {
-                            if (select.trySelect(null))
+                            if (select.trySelect())
                                 block.startCoroutineUnintercepted(null, select.completion)
                             return
                         } else {
@@ -746,6 +751,7 @@ internal abstract class AbstractChannel<E> : AbstractSendChannel<E>(), Channel<E
                 when {
                     pollResult === ALREADY_SELECTED -> return
                     pollResult === POLL_FAILED -> {} // retry
+                    pollResult === RETRY_ATOMIC -> {} // retry
                     pollResult is Closed<*> -> {
                         block.startCoroutineUnintercepted(ValueOrClosed.closed(pollResult.closeCause), select.completion)
                     }
@@ -928,8 +934,10 @@ internal abstract class AbstractChannel<E> : AbstractSendChannel<E>(), Channel<E
         @JvmField val block: suspend (Any?) -> R,
         @JvmField val receiveMode: Int
     ) : Receive<E>(), DisposableHandle {
-        override fun tryResumeReceive(value: E, idempotent: Any?): Any?  =
-            if (select.trySelect(idempotent)) (value ?: NULL_VALUE) else null
+        override fun tryResumeReceive(value: E, idempotent: Any?): Any? {
+            val result = select.trySelectIdempotent(idempotent)
+            return if (result === SELECT_STARTED) value ?: NULL_VALUE else result
+        }
 
         @Suppress("UNCHECKED_CAST")
         override fun completeResumeReceive(token: Any) {
@@ -938,7 +946,7 @@ internal abstract class AbstractChannel<E> : AbstractSendChannel<E>(), Channel<E
         }
 
         override fun resumeReceiveClosed(closed: Closed<*>) {
-            if (!select.trySelect(null)) return
+            if (!select.trySelect()) return
             when (receiveMode) {
                 RECEIVE_THROWS_ON_CLOSE -> select.resumeSelectCancellableWithException(closed.receiveException)
                 RECEIVE_RESULT -> block.startCoroutine(ValueOrClosed.closed<R>(closed.closeCause), select.completion)
@@ -987,10 +995,6 @@ internal val ENQUEUE_FAILED: Any = Symbol("ENQUEUE_FAILED")
 
 @JvmField
 @SharedImmutable
-internal val SELECT_STARTED: Any = Symbol("SELECT_STARTED")
-
-@JvmField
-@SharedImmutable
 internal val NULL_VALUE: Symbol = Symbol("NULL_VALUE")
 
 @JvmField
@@ -1012,6 +1016,7 @@ internal typealias Handler = (Throwable?) -> Unit
  */
 internal abstract class Send : LockFreeLinkedListNode() {
     abstract val pollResult: Any? // E | Closed
+    // Returns: null - failure, RETRY_ATOMIC for retry (only when idempotent != null), otherwise token for completeResumeSend
     abstract fun tryResumeSend(idempotent: Any?): Any?
     abstract fun completeResumeSend(token: Any)
     abstract fun resumeSendClosed(closed: Closed<*>)
@@ -1022,6 +1027,7 @@ internal abstract class Send : LockFreeLinkedListNode() {
  */
 internal interface ReceiveOrClosed<in E> {
     val offerResult: Any // OFFER_SUCCESS | Closed
+    // Returns: null - failure, RETRY_ATOMIC for retry (only when idempotent != null), otherwise token for completeResumeReceive
     fun tryResumeReceive(value: E, idempotent: Any?): Any?
     fun completeResumeReceive(token: Any)
 }
