@@ -5,15 +5,16 @@
 
 package kotlinx.coroutines.linearizability
 
-import com.devexperts.dxlab.lincheck.*
-import com.devexperts.dxlab.lincheck.annotations.*
-import com.devexperts.dxlab.lincheck.paramgen.*
-import com.devexperts.dxlab.lincheck.strategy.stress.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.internal.*
+import org.jetbrains.kotlinx.lincheck.LinChecker
+import org.jetbrains.kotlinx.lincheck.annotations.Operation
+import org.jetbrains.kotlinx.lincheck.annotations.Param
+import org.jetbrains.kotlinx.lincheck.paramgen.IntGen
+import org.jetbrains.kotlinx.lincheck.strategy.stress.StressOptions
 import kotlin.test.*
 
-@Param(name = "value", gen = IntGen::class, conf = "1:3")
+@Param(name = "value", gen = IntGen::class)
 class LockFreeListLCStressTest : TestBase() {
     class Node(val value: Int): LockFreeLinkedListNode()
 

@@ -5,12 +5,14 @@
 
 package kotlinx.coroutines.linearizability
 
-import com.devexperts.dxlab.lincheck.*
-import com.devexperts.dxlab.lincheck.annotations.*
-import com.devexperts.dxlab.lincheck.paramgen.*
-import com.devexperts.dxlab.lincheck.strategy.stress.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.internal.*
+import org.jetbrains.kotlinx.lincheck.LinChecker
+import org.jetbrains.kotlinx.lincheck.annotations.OpGroupConfig
+import org.jetbrains.kotlinx.lincheck.annotations.Operation
+import org.jetbrains.kotlinx.lincheck.annotations.Param
+import org.jetbrains.kotlinx.lincheck.paramgen.IntGen
+import org.jetbrains.kotlinx.lincheck.strategy.stress.StressOptions
 import kotlin.test.*
 
 internal data class Snapshot(val elements: List<Int>, val isClosed: Boolean) {
@@ -18,7 +20,7 @@ internal data class Snapshot(val elements: List<Int>, val isClosed: Boolean) {
 }
 
 @OpGroupConfig.OpGroupConfigs(OpGroupConfig(name = "consumer", nonParallel = true))
-@Param(name = "value", gen = IntGen::class, conf = "1:3")
+@Param(name = "value", gen = IntGen::class)
 class SCLockFreeTaskQueueLCStressTest : LockFreeTaskQueueLCTestBase() {
     private val q: LockFreeTaskQueue<Int> = LockFreeTaskQueue(singleConsumer = true)
 
