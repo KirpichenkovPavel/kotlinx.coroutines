@@ -315,3 +315,15 @@ public inline fun <reified T, R> combineTransform(
  */
 @ExperimentalCoroutinesApi
 public fun <T1, T2, R> Flow<T1>.zip(other: Flow<T2>, transform: suspend (T1, T2) -> R): Flow<R> = zipImpl(this, other, transform)
+
+public fun <vararg Ts, R> combineVariadic(
+        vararg others: *Flow<Ts>,
+        transform: suspend (*Ts) -> R
+): Flow<R> = safeFlow<R> {
+    combineInternalVariadic(
+            *others,
+            transform = {
+                emit(transform(it))
+            }
+    )
+}

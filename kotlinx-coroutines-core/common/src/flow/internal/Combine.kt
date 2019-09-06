@@ -50,7 +50,7 @@ internal suspend fun <R, T> FlowCollector<R>.combineInternal(
     arrayFactory: () -> Array<T?>,
     transform: suspend FlowCollector<R>.(Array<T>) -> Unit
 ) {
-    coroutineScope {
+    /*coroutineScope {
         val size = flows.size
         val channels =
             Array(size) { asFairChannel(flows[it]) }
@@ -74,7 +74,7 @@ internal suspend fun <R, T> FlowCollector<R>.combineInternal(
                 }
             }
         }
-    }
+    }*/
 }
 
 private inline fun SelectBuilder<Unit>.onReceive(
@@ -138,5 +138,36 @@ internal fun <T1, T2, R> zipImpl(flow: Flow<T1>, flow2: Flow<T2>, transform: sus
 private fun CoroutineScope.asChannel(flow: Flow<*>): ReceiveChannel<Any> = produce {
     flow.collect { value ->
         return@collect channel.send(value ?: NULL)
+    }
+}
+
+suspend fun <R, vararg Ts> FlowCollector<R>.combineInternalVariadic(
+        vararg flows: *Flow<Ts>,
+        transform: suspend FlowCollector<R>.(*Ts) -> Unit
+) {
+    coroutineScope<Unit> {
+        val size = flows.size
+        val channels =
+                Array(size) { asFairChannel(flows.get<Flow<*>>(it)) }
+        val latestValues = arrayOfNulls<Any?>(size)
+        val isClosed = Array(size) { false }
+
+        // See flow.combine(other) for explanation.
+        while (!isClosed.all { it }) {
+            select<Unit> {
+                for (i in 0 until size) {
+                    onReceive(isClosed[i], channels[i], { isClosed[i] = true }) { value ->
+                        latestValues[i] = value
+                        if (latestValues.all { it !== null }) {
+                            val arguments = Tuple<Ts>(size)
+                            for (index in 0 until size) {
+                                arguments[index] = NULL.unbox<Any?>(latestValues[index])
+                            }
+                            transform(arguments)
+                        }
+                    }
+                }
+            }
+        }
     }
 }

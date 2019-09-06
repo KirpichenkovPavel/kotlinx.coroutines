@@ -275,3 +275,11 @@ class CombineTransformIterableTest : CombineTestBase() {
         combineTransformOriginal(listOf(this, other)) { args -> emit(transform(args[0] as T1, args[1] as T2)) }
 }
 
+class CombineVariadicTest : CombineTestBase() {
+    override fun <T1, T2, R> Flow<T1>.combineLatest(
+            other: Flow<T2>,
+            transform: suspend (T1, T2) -> R
+    ): Flow<R> = combineVariadic(this, other) { first, second ->
+        transform(first, second)
+    }
+}
