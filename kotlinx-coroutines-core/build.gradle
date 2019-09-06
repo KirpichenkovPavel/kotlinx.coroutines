@@ -38,6 +38,17 @@ kotlin {
             if (targetName.contains("jvm") && compilation.compilationName == "main") {
                 compileTask.kotlinOptions.freeCompilerArgs += ["-Xdump-declarations-to=${buildDir}/visibilities.json"]
             }
+            kotlinOptions.freeCompilerArgs += [
+                    "-XXLanguage:+NewInference",
+                    "-XXLanguage:+VariadicGenerics"
+            ]
+        }
+    }
+
+    configurations.all {
+        resolutionStrategy {
+            force "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+            force "org.jetbrains.kotlin:kotlin-stdlib-common:$kotlin_version"
         }
     }
 }
