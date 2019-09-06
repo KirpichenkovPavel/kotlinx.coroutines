@@ -31,7 +31,7 @@ class TakeWhileTest : TestBase() {
     @Test
     fun testCancelUpstream() = runTest {
         var cancelled = false
-        val flow = flow {
+        val flow = flow<Int> {
             coroutineScope {
                 launch(start = CoroutineStart.ATOMIC) {
                     hang { cancelled = true }
@@ -49,7 +49,7 @@ class TakeWhileTest : TestBase() {
     @Test
     fun testErrorCancelsUpstream() = runTest {
         var cancelled = false
-        val flow = flow {
+        val flow = flow<Int> {
             coroutineScope {
                 launch(start = CoroutineStart.ATOMIC) {
                     hang { cancelled = true }

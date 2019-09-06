@@ -11,7 +11,7 @@ import kotlin.test.*
 class MapNotNullTest : TestBase() {
     @Test
     fun testMap() = runTest {
-        val flow = flow {
+        val flow = flow<Int?> {
             emit(1)
             emit(null)
             emit(2)
@@ -31,7 +31,7 @@ class MapNotNullTest : TestBase() {
     fun testErrorCancelsUpstream() = runTest {
         var cancelled = false
         val latch = Channel<Unit>()
-        val flow = flow {
+        val flow = flow<Int> {
             coroutineScope {
                 launch {
                     latch.send(Unit)

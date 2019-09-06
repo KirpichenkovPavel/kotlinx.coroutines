@@ -89,13 +89,13 @@ class CombineParametersTest : TestBase() {
     fun testVarargTransform() = runTest {
         val flow = combineTransform(
             flowOf("1"),
-            flowOf(2),
+//            flowOf(2),
             flowOf("3"),
             flowOf(4.toByte()),
             flowOf("5"),
             flowOf(null)
         ) { arr -> emit(arr.joinToString("")) }
-        assertEquals("12345null", flow.single())
+        assertEquals("1345null", flow.single())
     }
 
     @Test

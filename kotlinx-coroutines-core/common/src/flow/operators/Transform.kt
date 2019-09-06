@@ -60,7 +60,7 @@ public inline fun <T, R: Any> Flow<T>.mapNotNull(crossinline transform: suspend 
  * Returns a flow that wraps each element into [IndexedValue], containing value and its index (starting from zero).
  */
 @ExperimentalCoroutinesApi
-public fun <T> Flow<T>.withIndex(): Flow<IndexedValue<T>> = flow {
+public fun <T> Flow<T>.withIndex(): Flow<IndexedValue<T>> = flow<IndexedValue<T>> {
     var index = 0
     collect { value ->
         emit(IndexedValue(checkIndexOverflow(index++), value))
@@ -85,7 +85,7 @@ public fun <T> Flow<T>.onEach(action: suspend (T) -> Unit): Flow<T> = transform 
  * will produce `[], [1], [1, 2], [1, 2, 3]]`.
  */
 @ExperimentalCoroutinesApi
-public fun <T, R> Flow<T>.scan(initial: R, @BuilderInference operation: suspend (accumulator: R, value: T) -> R): Flow<R> = flow {
+public fun <T, R> Flow<T>.scan(initial: R, @BuilderInference operation: suspend (accumulator: R, value: T) -> R): Flow<R> = flow<R> {
     var accumulator: R = initial
     emit(accumulator)
     collect { value ->
@@ -106,7 +106,7 @@ public fun <T, R> Flow<T>.scan(initial: R, @BuilderInference operation: suspend 
  * will produce `[1, 3, 6, 10]`
  */
 @ExperimentalCoroutinesApi
-public fun <T> Flow<T>.scanReduce(operation: suspend (accumulator: T, value: T) -> T): Flow<T> = flow {
+public fun <T> Flow<T>.scanReduce(operation: suspend (accumulator: T, value: T) -> T): Flow<T> = flow<T> {
     var accumulator: Any? = NULL
     collect { value ->
         accumulator = if (accumulator === NULL) {

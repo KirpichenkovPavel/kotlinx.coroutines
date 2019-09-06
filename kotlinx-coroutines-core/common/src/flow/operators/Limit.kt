@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.internal.unsafeFlow as flow
 @ExperimentalCoroutinesApi
 public fun <T> Flow<T>.drop(count: Int): Flow<T> {
     require(count >= 0) { "Drop count should be non-negative, but had $count" }
-    return flow {
+    return flow<T> {
         var skipped = 0
         collect { value ->
             if (skipped >= count) emit(value) else ++skipped
@@ -31,7 +31,7 @@ public fun <T> Flow<T>.drop(count: Int): Flow<T> {
  * Returns a flow containing all elements except first elements that satisfy the given predicate.
  */
 @ExperimentalCoroutinesApi
-public fun <T> Flow<T>.dropWhile(predicate: suspend (T) -> Boolean): Flow<T> = flow {
+public fun <T> Flow<T>.dropWhile(predicate: suspend (T) -> Boolean): Flow<T> = flow<T> {
     var matched = false
     collect { value ->
         if (matched) {
@@ -51,7 +51,7 @@ public fun <T> Flow<T>.dropWhile(predicate: suspend (T) -> Boolean): Flow<T> = f
 @ExperimentalCoroutinesApi
 public fun <T> Flow<T>.take(count: Int): Flow<T> {
     require(count > 0) { "Requested element count $count should be positive" }
-    return flow {
+    return flow<T> {
         var consumed = 0
         try {
             collect { value ->
@@ -70,7 +70,7 @@ public fun <T> Flow<T>.take(count: Int): Flow<T> {
  * Returns a flow that contains first elements satisfying the given [predicate].
  */
 @ExperimentalCoroutinesApi
-public fun <T> Flow<T>.takeWhile(predicate: suspend (T) -> Boolean): Flow<T> = flow {
+public fun <T> Flow<T>.takeWhile(predicate: suspend (T) -> Boolean): Flow<T> = flow<T> {
     try {
         collect { value ->
             if (predicate(value)) emit(value)

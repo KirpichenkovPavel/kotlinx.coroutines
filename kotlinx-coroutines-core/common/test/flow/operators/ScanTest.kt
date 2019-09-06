@@ -40,7 +40,7 @@ class ScanTest : TestBase() {
     fun testErrorCancelsUpstream() = runTest {
         expect(1)
         val latch = Channel<Unit>()
-        val flow = flow {
+        val flow = flow<Int> {
             coroutineScope {
                 launch {
                     latch.send(Unit)

@@ -11,6 +11,7 @@ import kotlin.coroutines.*
 import kotlin.math.*
 import kotlin.test.*
 
+@Suppress("TYPE_INFERENCE_ONLY_INPUT_TYPES")
 class ChannelsTest: TestBase() {
     private val testList = listOf(1, 2, 3)
 

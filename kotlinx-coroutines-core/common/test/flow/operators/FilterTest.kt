@@ -27,7 +27,7 @@ class FilterTest : TestBase() {
     fun testErrorCancelsUpstream() = runTest {
         var cancelled = false
         val latch = Channel<Unit>()
-        val flow = flow {
+        val flow = flow<Int> {
             coroutineScope {
                 launch {
                     latch.send(Unit)
@@ -63,7 +63,7 @@ class FilterTest : TestBase() {
     fun testErrorCancelsUpstreamwFilterNot() = runTest {
         var cancelled = false
         val latch = Channel<Unit>()
-        val flow = flow {
+        val flow = flow<Int> {
             coroutineScope {
                 launch {
                     latch.send(Unit)

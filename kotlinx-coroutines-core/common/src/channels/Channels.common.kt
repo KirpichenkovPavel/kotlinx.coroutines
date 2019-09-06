@@ -1287,7 +1287,7 @@ public suspend fun <E> ReceiveChannel<E>.toSet(): Set<E> =
     level = DeprecationLevel.WARNING
 )
 public fun <E, R> ReceiveChannel<E>.flatMap(context: CoroutineContext = Dispatchers.Unconfined, transform: suspend (E) -> ReceiveChannel<R>): ReceiveChannel<R> =
-    GlobalScope.produce(context, onCompletion = consumes()) {
+    GlobalScope.produce<R>(context, onCompletion = consumes()) {
         for (e in this@flatMap) {
             transform(e).toChannel(this)
         }

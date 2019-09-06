@@ -6,6 +6,7 @@ package kotlinx.coroutines
 
 import kotlin.test.*
 
+@Suppress("TYPE_INFERENCE_ONLY_INPUT_TYPES")
 class AwaitTest : TestBase() {
 
     @Test

@@ -107,7 +107,7 @@ class TickerChannelCommonTest(private val channelFactory: Channel) : TestBase() 
         }
     }
 
-    private fun ReceiveChannel<Int>.averageInTimeWindow(timespan: Long) = GlobalScope.produce {
+    private fun ReceiveChannel<Int>.averageInTimeWindow(timespan: Long) = GlobalScope.produce<Double> {
         val delayChannel = channelFactory(delay = timespan, initialDelay = timespan)
         var sum = 0
         var n = 0

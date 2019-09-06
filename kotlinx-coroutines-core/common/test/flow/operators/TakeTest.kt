@@ -10,7 +10,7 @@ import kotlin.test.*
 class TakeTest : TestBase() {
     @Test
     fun testTake() = runTest {
-        val flow = flow {
+        val flow = flow<Int> {
             emit(1)
             emit(2)
         }
@@ -42,7 +42,7 @@ class TakeTest : TestBase() {
     @Test
     fun testCancelUpstream() = runTest {
         var cancelled = false
-        val flow = flow {
+        val flow = flow<Int> {
             coroutineScope {
                 launch(start = CoroutineStart.ATOMIC) {
                     hang { cancelled = true }
@@ -59,7 +59,7 @@ class TakeTest : TestBase() {
     @Test
     fun testErrorCancelsUpstream() = runTest {
         var cancelled = false
-        val flow = flow {
+        val flow = flow<Int> {
             coroutineScope {
                 launch(start = CoroutineStart.ATOMIC) {
                     hang { cancelled = true }
@@ -78,7 +78,7 @@ class TakeTest : TestBase() {
 
     @Test
     fun takeWithRetries() = runTest {
-        val flow = flow {
+        val flow = flow<Int> {
             expect(1)
             emit(1)
             expect(2)
@@ -102,7 +102,7 @@ class TakeTest : TestBase() {
     @Test
     fun testNonIdempotentRetry() = runTest {
         var count = 0
-        flow { while (true) emit(1) }
+        flow<Int> { while (true) emit(1) }
             .retry { count++ % 2 != 0 }
             .take(1)
             .collect {

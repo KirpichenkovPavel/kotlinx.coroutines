@@ -246,7 +246,7 @@ public fun <T, R> Flow<T>.flowWith(
 ): Flow<R> {
     checkFlowContext(flowContext)
     val source = this
-    return unsafeFlow {
+    return unsafeFlow<R> {
         /**
          * Here we should remove a Job instance from the context.
          * All builders are written using scoping and no global coroutines are launched, so it is safe not to provide explicit Job.

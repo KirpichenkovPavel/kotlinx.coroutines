@@ -11,7 +11,7 @@ class RetryTest : TestBase() {
     @Test
     fun testRetryWhen() = runTest {
         expect(1)
-        val flow = flow {
+        val flow = flow<Int> {
             emit(1)
             throw TestException()
         }
@@ -30,7 +30,7 @@ class RetryTest : TestBase() {
     @Test
     fun testRetry() = runTest {
         var counter = 0
-        val flow = flow {
+        val flow = flow<Int> {
             emit(1)
             if (++counter < 4) throw TestException()
         }
@@ -45,7 +45,7 @@ class RetryTest : TestBase() {
     @Test
     fun testRetryPredicate() = runTest {
         var counter = 0
-        val flow = flow {
+        val flow = flow<Int> {
             emit(1);
             if (++counter == 1) throw TestException()
         }
@@ -58,7 +58,7 @@ class RetryTest : TestBase() {
     @Test
     fun testRetryExceptionFromDownstream() = runTest {
         var executed = 0
-        val flow = flow {
+        val flow = flow<Int> {
             emit(1)
         }.retry(42).map {
             ++executed
@@ -72,7 +72,7 @@ class RetryTest : TestBase() {
     @Test
     fun testWithTimeoutRetried() = runTest {
         var state = 0
-        val flow = flow {
+        val flow = flow<Int> {
             if (state++ == 0) {
                 expect(1)
                 withTimeout(1) {

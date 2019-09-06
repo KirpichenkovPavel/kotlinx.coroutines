@@ -43,7 +43,7 @@ private inline fun <T, K> Flow<T>.distinctUntilChangedBy(
     crossinline keySelector: (T) -> K,
     crossinline areEquivalent: (old: K, new: K) -> Boolean
 ): Flow<T> =
-    flow {
+    flow<T> {
         var previousKey: Any? = NULL
         collect { value ->
             val key = keySelector(value)

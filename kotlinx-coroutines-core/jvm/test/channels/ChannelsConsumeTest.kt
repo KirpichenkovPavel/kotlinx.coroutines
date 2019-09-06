@@ -13,6 +13,7 @@ import kotlin.test.*
 /**
  * Tests that various operators on channels properly consume (close) their source channels.
  */
+@Suppress("TYPE_INFERENCE_ONLY_INPUT_TYPES")
 class ChannelsConsumeTest : TestBase() {
     private val sourceList = (1..10).toList()
 

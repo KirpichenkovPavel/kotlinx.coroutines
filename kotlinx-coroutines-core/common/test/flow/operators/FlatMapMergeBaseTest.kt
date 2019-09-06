@@ -12,14 +12,14 @@ import kotlin.test.*
 abstract class FlatMapMergeBaseTest : FlatMapBaseTest() {
     @Test
     fun testFailureCancellation() = runTest {
-        val flow = flow {
+        val flow = flow<Int> {
             expect(2)
             emit(1)
             expect(3)
             emit(2)
             expect(4)
         }.flatMap {
-            if (it == 1) flow {
+            if (it == 1) flow<Int> {
                 hang { expect(6) }
             } else flow<Int> {
                 expect(5)

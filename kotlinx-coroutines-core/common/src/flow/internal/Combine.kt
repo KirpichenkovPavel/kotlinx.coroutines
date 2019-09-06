@@ -50,7 +50,7 @@ internal suspend fun <R, T> FlowCollector<R>.combineInternal(
     arrayFactory: () -> Array<T?>,
     transform: suspend FlowCollector<R>.(Array<T>) -> Unit
 ) {
-    /*coroutineScope {
+    coroutineScope {
         val size = flows.size
         val channels =
             Array(size) { asFairChannel(flows[it]) }
@@ -66,7 +66,7 @@ internal suspend fun <R, T> FlowCollector<R>.combineInternal(
                         if (latestValues.all { it !== null }) {
                             val arguments = arrayFactory()
                             for (index in 0 until size) {
-                                arguments[index] = NULL.unbox(latestValues[index])
+                                arguments[index] = NULL.unbox<T?>(latestValues[index])
                             }
                             transform(arguments as Array<T>)
                         }
@@ -74,7 +74,7 @@ internal suspend fun <R, T> FlowCollector<R>.combineInternal(
                 }
             }
         }
-    }*/
+    }
 }
 
 private inline fun SelectBuilder<Unit>.onReceive(

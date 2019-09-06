@@ -15,7 +15,7 @@ class FlatMapMergeTest : FlatMapMergeBaseTest() {
     override fun testFlatMapConcurrency() = runTest {
         var concurrentRequests = 0
         val flow = (1..100).asFlow().flatMapMerge(concurrency = 2) { value ->
-            flow {
+            flow<Int> {
                 ++concurrentRequests
                 emit(value)
                 delay(Long.MAX_VALUE)
@@ -39,11 +39,11 @@ class FlatMapMergeTest : FlatMapMergeBaseTest() {
 
     @Test
     fun testCancellationExceptionDownstream() = runTest {
-        val flow = flow {
+        val flow = flow<Int> {
             emit(1)
             hang { expect(2) }
         }.flatMapMerge {
-            flow {
+            flow<Int> {
                 emit(it)
                 expect(1)
                 throw CancellationException("")
@@ -56,14 +56,14 @@ class FlatMapMergeTest : FlatMapMergeBaseTest() {
 
     @Test
     fun testCancellationExceptionUpstream() = runTest {
-        val flow = flow {
+        val flow = flow<Int> {
             expect(1)
             emit(1)
             expect(2)
             yield()
             throw CancellationException("")
         }.flatMapMerge {
-            flow {
+            flow<Int> {
                 expect(3)
                 emit(it)
                 hang { expect(4) }
@@ -76,14 +76,14 @@ class FlatMapMergeTest : FlatMapMergeBaseTest() {
 
     @Test
     fun testCancellation() = runTest {
-        val result = flow {
+        val result = flow<Int> {
             emit(1)
             emit(2)
             emit(3)
             emit(4)
             expectUnreached() // Cancelled by take
             emit(5)
-        }.flatMapMerge(2) { v -> flow { emit(v) } }
+        }.flatMapMerge(2) { v -> flow<Int> { emit(v) } }
             .take(2)
             .toList()
         assertEquals(listOf(1, 2), result)

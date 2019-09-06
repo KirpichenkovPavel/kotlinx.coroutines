@@ -15,7 +15,7 @@ class FlatMapConcatTest : FlatMapBaseTest() {
     fun testFlatMapConcurrency() = runTest {
         var concurrentRequests = 0
         val flow = (1..100).asFlow().flatMapConcat { value ->
-            flow {
+            flow<Int> {
                 ++concurrentRequests
                 emit(value)
                 delay(Long.MAX_VALUE)

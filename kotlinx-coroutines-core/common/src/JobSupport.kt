@@ -892,7 +892,7 @@ public open class JobSupport constructor(active: Boolean) : Job, ChildJob, Paren
         }
     }
 
-    public final override val children: Sequence<Job> get() = sequence {
+    public final override val children: Sequence<Job> get() = sequence<ChildJob> {
         when (val state = this@JobSupport.state) {
             is ChildHandleNode -> yield(state.childJob)
             is Incomplete -> state.list?.let { list ->

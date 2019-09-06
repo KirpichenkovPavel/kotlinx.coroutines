@@ -111,14 +111,14 @@ class FlatMapLatestTest : TestBase() {
 
     @Test
     fun testFailureUpstream() = runTest {
-        val flow = flow {
+        val flow = flow<Int> {
             expect(1)
             emit(1)
             yield()
             expect(3)
             throw TestException()
         }.flatMapLatest<Int, Long> {
-            flow {
+            flow<Long> {
                 expect(2)
                 hang {
                     expect(4)

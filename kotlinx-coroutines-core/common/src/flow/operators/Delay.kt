@@ -41,7 +41,7 @@ import kotlinx.coroutines.flow.internal.unsafeFlow as flow
 @FlowPreview
 public fun <T> Flow<T>.debounce(timeoutMillis: Long): Flow<T> {
     require(timeoutMillis > 0) { "Debounce timeout should be positive" }
-    return scopedFlow { downstream ->
+    return scopedFlow<T> { downstream ->
         // Actually Any, KT-30796
         val values = produce<Any?>(capacity = Channel.CONFLATED) {
             collect { value -> send(value ?: NULL) }
@@ -90,7 +90,7 @@ public fun <T> Flow<T>.debounce(timeoutMillis: Long): Flow<T> {
 @FlowPreview
 public fun <T> Flow<T>.sample(periodMillis: Long): Flow<T> {
     require(periodMillis > 0) { "Sample period should be positive" }
-    return scopedFlow { downstream ->
+    return scopedFlow<T> { downstream ->
         val values = produce<Any?>(capacity = Channel.CONFLATED) {
             // Actually Any, KT-30796
             collect { value -> send(value ?: NULL) }

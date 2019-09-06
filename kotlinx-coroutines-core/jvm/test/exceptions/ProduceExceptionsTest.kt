@@ -72,7 +72,7 @@ class ProduceExceptionsTest : TestBase() {
     @Test
     fun testCancelProduceChannel() = runTest {
         var channel: ReceiveChannel<Int>? = null
-        channel = produce {
+        channel = produce<Int> {
             expect(2)
             channel!!.cancel()
             try {
@@ -96,7 +96,7 @@ class ProduceExceptionsTest : TestBase() {
     @Test
     fun testCancelProduceChannelWithException() = runTest {
         var channel: ReceiveChannel<Int>? = null
-        channel = produce(NonCancellable) {
+        channel = produce<Int>(NonCancellable) {
             expect(2)
             channel!!.cancel(TestCancellationException())
             try {
@@ -121,7 +121,7 @@ class ProduceExceptionsTest : TestBase() {
     @Test
     fun testCancelChannelWithJob() = runTest {
         val job = Job()
-        val channel = produce(job) {
+        val channel = produce<Int>(job) {
             expect(2)
             job.cancel()
             try {
@@ -145,7 +145,7 @@ class ProduceExceptionsTest : TestBase() {
     @Test
     fun testCancelChannelWithJobWithException() = runTest {
         val job = Job()
-        val channel = produce(job) {
+        val channel = produce<Int>(job) {
             expect(2)
             job.completeExceptionally(TestException2())
             try {

@@ -29,7 +29,7 @@ class ProduceConsumeJvmTest(
     @Test
     fun testProducer() = runTest {
         var sentAll = false
-        val producer = produce(capacity = capacity) {
+        val producer = produce<Int>(capacity = capacity) {
             for (i in 1..number) {
                 send(i)
             }
